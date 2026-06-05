@@ -5,32 +5,29 @@
  * Uses PHP Sessions to keep the user logged in across pages.
  */
 
-// require_once stops script execution if 'Database.php' is missing. 
 // It imports your database connection class so we can run SQL queries.
 require_once 'Database.php';
 
-// Start the session so we can store login info
+
 // session_start() tells the server to look for an existing session ID cookie.
 // If none exists, it creates a new session. This lets us persist data across different pages.
 session_start();
 
-// If the user is already logged in, send them to the dashboard
-// Check if a specific key ('user_id') exists inside the global $_SESSION array.
-// If it does, the user is already logged in, so we don't need to show the login page.
+
 if (isset($_SESSION['user_id'])) {
-    // header() sends a raw HTTP response header to the browser forcing a redirect.
+    
     header('Location: dashboard.php');
     exit;
 }
 
-$error = ''; // will hold any error message to display
+$error = ''; 
 
 // ── Process the form when it is submitted ──────────────────
 // $_SERVER is a PHP superglobal. 'REQUEST_METHOD' checks if the page was accessed 
 // via a standard page load (GET) or a form submission (POST).
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Read and clean up the submitted values
+    
     // $_POST fetches data sent via the HTTP POST method using the form input 'name' attributes.
     // trim() strips accidental whitespace from the beginning and end of the string.
     // ?? '' is the Null Coalescing Operator. If $_POST['email'] doesn't exist, it defaults to an empty string.
@@ -42,8 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email === '' || $password === '') {
         $error = 'Please fill in both fields.';
     } else {
-        // Look up the user by email in the database
-        // Database::getInstance() is a Singleton pattern call ensuring we use a single, shared DB connection.
+        // Look up the user by email in the database,Singleton pattern call ensuring we use a single, shared DB connection.
         $db   = Database::getInstance();
 
         // SQL SECURED: We use a prepared statement ('?'). This prevents SQL Injection attacks 
@@ -58,29 +54,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch(); // returns an array or false
 
         // password_verify() checks the plain password against the stored hash
-        // password_verify() is a secure, built-in PHP function. It takes the plain text password 
-        // from the form and securely checks it against the encrypted hash ($user['password']) saved in your database.
         if ($user && password_verify($password, $user['password'])) {
             // Correct credentials — save user info into the session
-            // Authentication successful! We save user data into the $_SESSION superglobal array.
-            // Because this is stored on the server, the user stays authenticated as they browse the site.
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
 
             // Also set a cookie to remember the user's name for 7 days
             // setcookie() stores data directly on the user's browser.
-            // Arguments: (Cookie Name, Cookie Value, Expiration Time in Unix Timestamp, Available Path)
-            // time() + (7 * 24 * 3600) means the cookie expires exactly 7 days from right now.
             setcookie('cms_last_user', $user['name'], time() + (7 * 24 * 3600), '/');
 
             // Send them to the main dashboard
-            // Redirect the successfully authenticated user to the protected dashboard page.
             header('Location: dashboard.php');
             exit;
         } else {
             // Generic error message for security. Never specify whether the email or password was the wrong choice,
-            // as that helps malicious hackers guess accounts.
             $error = 'Invalid email or password. Please try again.';
         }
     }
@@ -190,19 +178,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Change button text to show something is happening
-                // UI Improvement: Updates the text inside the button to show processing progress.
-                // .prop('disabled', true) deactivates the button so users can't accidentally double-click and double-submit.
+                //Updates the text inside the button to show processing progress.
                 $('#submitBtn').text('Signing in…').prop('disabled', true);
             });
 
             // If the page has an error, shake the card slightly to draw attention
-            // PHP Injection inside JavaScript: PHP evaluates this on the server side first.
             // If there's an error, PHP prints this block of jQuery directly into the script before serving it to the browser.
             <?php if ($error !== ''): ?>
                 // Clears out any default CSS-based entry animations on the login card
                 $('.auth-card').css('animation', 'none');
                 
-                // setTimeout creates a microscopic delay (100 milliseconds) before running the inner animation.
+                // setTimeout creates a  delay (100 milliseconds) before running the inner animation.
                 setTimeout(function () {
                     $('.auth-card').animate({ marginLeft: '-8px' }, 60)
                                   .animate({ marginLeft:  '8px' }, 60)

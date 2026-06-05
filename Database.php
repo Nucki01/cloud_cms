@@ -17,7 +17,6 @@
 class Database
 {
     // --------------- Database credentials ---------------
-    // Change these to match your local environment (XAMPP default shown)
     private const DB_HOST = 'localhost';
     private const DB_NAME = 'cloudcms';
     private const DB_USER = 'root';

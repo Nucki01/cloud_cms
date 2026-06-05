@@ -9,7 +9,6 @@ require_once 'Database.php';
 
 session_start();
 
-// Already logged in? Go to dashboard
 if (isset($_SESSION['user_id'])) {
     header('Location: dashboard.php');
     exit;
@@ -19,7 +18,6 @@ $error   = '';
 $success = '';
 
 // ── Process the registration form ─────────────────────────
-// Checks if the incoming request payload was transmitted via an HTTP POST action (form submit).
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Sanitizes and intercepts the input field parameters using data arrays passed by the browser.
@@ -30,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirm  = trim($_POST['confirm']  ?? '');
 
     // ---- Validation ----
-    // ---- Server-Side Validation Suite ----
     // Stage 1: Absolute Presence. Double check that no field arrived completely blank.
     if ($name === '' || $email === '' || $password === '' || $confirm === '') {
         $error = 'All fields are required.';
@@ -67,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
             // Insert the new user (role defaults to 'user' in the DB schema)
-            // Prepares an operational command structure to generate a brand new data entity entry.
             $insert = $db->prepare(
                 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)'
             );

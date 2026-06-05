@@ -11,11 +11,9 @@
 // Include the Singleton Database class to interact with the DB
 require_once 'Database.php';
 
-//starting session
 session_start();
 
-// Only admins may access this page 
-// // SECURITY CHECK: Only allow access if the user is authenticated and has an 'admin' role
+// SECURITY CHECK: Only allow access if the user is authenticated and has an 'admin' role
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     // Redirect unauthorized users back to the dashboard and stop script execution
     header('Location: dashboard.php');
@@ -26,26 +24,25 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
 $userId       = $_SESSION['user_id'];
 $userName     = $_SESSION['user_name'];
 $userRole     = $_SESSION['user_role'];
-// Grab the first letter of the username for the profile placeholder
+
+//first letter of the username for the profile placeholder
 $avatarLetter = strtoupper($userName[0]); 
 
 // Get database instance
 $db      = Database::getInstance();
-$message = ''; // Stores feedback messages shown to the user
-$msgType = 'success'; // Toggles styling for error vs success feedback boxes
+$message = ''; // feedback messages shown to the user
+$msgType = 'success'; // styling for error vs success feedback boxes
 
 // ── ACTION: Export log to .txt file ───────────────────────
 // Triggers when the 'Export to .txt' form button is clicked
 if (isset($_POST['export_log'])) {
 
     // Fetch all users for the log
-    // Fetch all columns required for the text log from the users table
     $logUsers = $db->query(
         'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC'
     )->fetchAll();
 
     // Build the text content line by line
-    // Initialize string and append metadata headers to the text log
     $logContent  = "CloudCMS – User Log Export\n";
     $logContent .= "Generated: " . date('Y-m-d H:i:s') . "\n";
     $logContent .= "Exported by: {$userName}\n";
@@ -62,7 +59,6 @@ if (isset($_POST['export_log'])) {
     }
 
     // Write the text to a file in the project root
-    // Write the compiled raw text into a file sitting in the same directory as this script
     $logFile = __DIR__ . '/user_log.txt';
     file_put_contents($logFile, $logContent);
 
@@ -77,11 +73,9 @@ if (isset($_POST['update_role'])) {
     $targetRole = $_POST['new_role'] ?? '';
 
     // Make sure the role value is only 'admin' or 'user'
-    // Data validation: Verify ID is real and role inputs map exactly to system specifications
     if ($targetId > 0 && in_array($targetRole, ['admin', 'user'])) {
 
-        // Prevent admin from demoting themselves
-        // CRITICAL BUSINESS LOGIC: Prevent active administrators from accidentally demoting themselves
+        //Prevent active administrators from accidentally demoting themselves
         if ($targetId === $userId) {
             $message = 'You cannot change your own role.';
             $msgType = 'error';
@@ -99,11 +93,10 @@ if (isset($_POST['update_role'])) {
 if (isset($_POST['delete_user'])) {
     $targetId = (int)($_POST['target_id'] ?? 0);
 
-    // Business Logic Validation: Ensure ID is valid and prevent suicide/self-deletion of accounts
+    // Ensure ID is valid and prevent suicide/self-deletion of accounts
     if ($targetId > 0 && $targetId !== $userId) {
 
-        // CASCADE in the DB schema also deletes their files automatically
-        // Run parameterized query. Note: Database level Foreign Key (ON DELETE CASCADE) must handle related files.
+        // Database level Foreign Key (ON DELETE CASCADE) must handle related files.
         $stmt = $db->prepare('DELETE FROM users WHERE id = ?');
         $stmt->execute([$targetId]);
         $message = 'User deleted successfully.';
@@ -134,12 +127,14 @@ $allFiles = $db->query(
      LIMIT 10'
 )->fetchAll();
 
-//Formats file sizes from raw bytes to human-readable units (B, KB, MB)
+//Formats file sizes from raw bytes to B, KB, MB
 function formatSize(int $bytes): string {
     if ($bytes < 1024)    return $bytes . ' B';
     if ($bytes < 1048576) return round($bytes / 1024, 1) . ' KB';
     return round($bytes / 1048576, 2) . ' MB';
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
